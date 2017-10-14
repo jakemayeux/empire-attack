@@ -9,20 +9,19 @@ class Game {
   constructor(){
     this.width = 100
     this.height = 100
-    this.map = [] 
+    this.map = []
     this.id = shortid.generate()
     this.maxPlayers = 30
     this.players = 0
     for(let x = 0; x < this.width; x++){
-      console.log(x)
       this.map[x] = new Array()
       for(let y = 0; y < this.width; y++){
         this.map[x][y] = new Tile()
       }
     }
-	  this.genLake(1)
+	  this.genLake(6)
   }
-  
+
   genLake(i){
 	  if(i<1) return
 
@@ -34,7 +33,7 @@ class Game {
 					if(t.type == TILE.LAKE) wn++
 				}
 
-				let rand = Math.random() * wm
+				let rand = Math.random() * wn
 				if(rand > .3){
 					changes.push({x:x,y:y})
 				}
@@ -43,8 +42,9 @@ class Game {
 		for(let t of changes){
 			this.map[t.x][t.y].type = TILE.LAKE
 		}
+    this.genLake(--i)
 	}
-		
+
 
 	getNeighbors(x,y){
 		let ret = []
@@ -76,7 +76,7 @@ class Tile {
     let rand = Math.random()
     if(rand < .7){
       this.type = TILE.BLANK
-    }else if(rand < .9){
+    }else if(rand < .9994){
       this.type = TILE.ROCK
     }else{
       this.type = TILE.LAKE

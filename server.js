@@ -21,7 +21,7 @@ class Game {
     }
 	  this.genLake(6)
   }
-  
+
 	genLake(i){
 	  if(i<1) return
 
@@ -76,7 +76,7 @@ class Tile {
     let rand = Math.random()
     this.type = TILE.BLANK
     if(rand < .05) this.type = TILE.ROCK
-    if(rand < .1) this.type = TILE.LAKE
+    else if(rand < .0505) this.type = TILE.LAKE
   }
 }
 

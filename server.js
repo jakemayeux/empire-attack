@@ -21,8 +21,8 @@ class Game {
     }
 	  this.genLake(6)
   }
-
-  genLake(i){
+  
+	genLake(i){
 	  if(i<1) return
 
 	  let changes = []
@@ -74,13 +74,9 @@ const TILE = {
 class Tile {
   constructor(){ // random terrain object
     let rand = Math.random()
-    if(rand < .7){
-      this.type = TILE.BLANK
-    }else if(rand < .9994){
-      this.type = TILE.ROCK
-    }else{
-      this.type = TILE.LAKE
-    }
+    this.type = TILE.BLANK
+    if(rand < .05) this.type = TILE.ROCK
+    if(rand < .1) this.type = TILE.LAKE
   }
 }
 

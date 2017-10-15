@@ -20,9 +20,22 @@ mouse = {
   down:false,
 }
 
+var getPixelRatio = function(context) {
+    var backingStore = context.backingStorePixelRatio ||
+          context.webkitBackingStorePixelRatio ||
+          context.mozBackingStorePixelRatio ||
+          context.msBackingStorePixelRatio ||
+          context.oBackingStorePixelRatio ||
+          context.backingStorePixelRatio || 1;
+
+    return (window.devicePixelRatio || 1) / backingStore;
+}
+
 window.onresize =()=> {
-  can.width = window.innerWidth
-  can.height = window.innerHeight
+  can.width = window.innerWidth*2
+  can.height = window.innerHeight*2
+  can.style.width = window.innerWidth + 'px'
+  can.style.height = window.innerHeight + 'px'
   drawMap()
 }
 window.onresize()

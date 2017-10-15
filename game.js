@@ -6,12 +6,18 @@ map = []
 mapWidth = 0
 mapHeight = 0
 
-scale = 10;
-offset = {x:5, y:0}
+drawCache = []
+
+scale = 20;
+offset = {x:90, y:0}
 mouse = {
   x:-1,y:-1,
+  lx:-1,ly:-1,
+  cx:-1,cy:-1,
   tx:0,ty:0,
-  ltx:0,lty:0
+  ltx:0,lty:0,
+  pan:false,
+  down:false,
 }
 
 window.onresize =()=> {
@@ -72,35 +78,49 @@ function drawCursor(x, y){
   y = y*scale + offset.y
   ctx.beginPath()
   ctx.strokeStyle = '#222222'
-  ctx.arc(x, y, scale/2, 0, Math.PI*2)
+  ctx.arc(x, y, scale/2-2, 0, Math.PI*2)
   ctx.stroke()
 }
 
-function toTilePos(x, y){
-  let ret = {}
-  ret.x = x/scale + offset.x
-  ret.y = y/scale + offset.y
-  return ret
+function dist(x1, y1, x2, y2){
+  return Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2))
 }
 
 window.onmousedown =(e)=> {
-  console.log(e)
+  mouse.down = true
+  mouse.cx = e.clientX
+  mouse.cy = e.clientY
 }
 
 window.onmouseup =(e)=> {
-  console.log(e)
+  mouse.down = false
+  mouse.pan = false
 }
 
 window.onmousemove =(e)=> {
+  mouse.lx = mouse.x
+  mouse.ly = mouse.y
   mouse.x = e.clientX
   mouse.y = e.clientY
-  let tx = Math.round(mouse.x/scale)
-  let ty = Math.round(mouse.y/scale)
-  if(tx > 0 && tx < mapWidth && ty > 0 && ty < mapHeight){
+  let tx = Math.round(mouse.x/scale - offset.x/scale)
+  let ty = Math.round(mouse.y/scale - offset.y/scale)
+  if(tx > -1 && tx < mapWidth && ty > -1 && ty < mapHeight && !mouse.pan){
     mouse.ltx = mouse.tx
     mouse.lty = mouse.ty
     mouse.tx = tx
     mouse.ty = ty
   }
+
+  if(mouse.down && dist(mouse.cx,mouse.cy,mouse.x,mouse.y) > 5){
+    mouse.pan = true
+  }
+
+  if(mouse.pan){
+    offset.x += mouse.x - mouse.lx
+    offset.y += mouse.y- mouse.ly
+    ctx.clearRect(0,0,can.width,can.height)
+    drawMap()
+  }
+
   drawCursor(mouse.x, mouse.y)
 }

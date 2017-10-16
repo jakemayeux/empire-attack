@@ -6,10 +6,10 @@ map = []
 mapWidth = 0
 mapHeight = 0
 
-drawCache = []
+cache = []
 
 scale = 20;
-offset = {x:90, y:0}
+offset = {x:0, y:0}
 mouse = {
   x:-1,y:-1,
   lx:-1,ly:-1,
@@ -30,10 +30,12 @@ var getPixelRatio = function(context) {
 
     return (window.devicePixelRatio || 1) / backingStore;
 }
+pixRatio = getPixelRatio(ctx)
+console.log(pixRatio)
 
 window.onresize =()=> {
-  can.width = window.innerWidth*2
-  can.height = window.innerHeight*2
+  can.width = window.innerWidth*pixRatio
+  can.height = window.innerHeight*pixRatio
   can.style.width = window.innerWidth + 'px'
   can.style.height = window.innerHeight + 'px'
   drawMap()
@@ -49,6 +51,7 @@ socket.on('map', (m) => {
   mapWidth = m.length
   mapHeight = m[0].length
   drawMap()
+  console.log('done')
 })
 
 function drawMap(){
@@ -61,19 +64,38 @@ function drawMap(){
 }
 
 function drawTile(x, y, tile){
-  clearTile(x, y)
-  x = x*scale + offset.x
-  y = y*scale + offset.y
-  ctx.beginPath()
-  if(tile.type == 'lake'){
-    ctx.fillStyle = '#0000ff'
-  }else if(tile.type == 'rock'){
-    ctx.fillStyle = '#222222'
-  }else{
-    ctx.fillStyle = '#eeeeee'
-  }
-  ctx.arc(x, y, scale/2, 0, Math.PI*2)
-  ctx.fill()
+	clearTile(x, y)
+	x = x*scale + offset.x
+	y = y*scale + offset.y
+	if(tile.type == 'lake'){
+		ctx.fillStyle = '#0000ff'
+	}else if(tile.type == 'rock'){
+		ctx.fillStyle = '#222222'
+	}else{
+		ctx.fillStyle = '#eeeeee'
+	}
+	color = ctx.fillStyle
+	id = ''+color 
+	if(cache[id] && true){
+		ctx.putImageData(cache[id], (x-scale/2)*pixRatio, (y-scale/2)*pixRatio)
+	}else{
+		ctx.beginPath()
+		ctx.arc(x, y, scale/2, 0, Math.PI*2)
+		ctx.fill()
+		if(x*pixRatio > scale*pixRatio && 
+			y*pixRatio > scale*pixRatio && 
+			x*pixRatio < can.width-scale*pixRatio && 
+			y*pixRatio < can.height-scale*pixRatio){
+			setCache(x,y,id)
+		}
+	}
+}
+
+function setCache(x, y, id){
+	cache[id] = 
+		ctx.getImageData(
+		(x-scale/2)*pixRatio, (y-scale/2)*pixRatio, 
+		scale*pixRatio, scale*pixRatio)
 }
 
 function clearTile(x, y){
@@ -97,6 +119,49 @@ function drawCursor(x, y){
 
 function dist(x1, y1, x2, y2){
   return Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2))
+}
+
+function drawBorders(x, y, borders){
+	ctx.beginPath()
+	if(borders.compass.substr(0,2) == 'NS' || borders.compass.substr(-2,2) == 'WE'){
+		ctx.fillRect(x-this.scale/2, y-this.scale/2, this.scale, this.scale)
+		return false
+	}
+	ctx.lineWidth = this.scale
+	for(i of borders.arrv){
+		ctx.moveTo(x, y)
+		ctx.lineTo(x+(i.x*this.scale/2), y+(i.y*this.scale/2))
+	}
+	ctx.stroke()
+	return true
+}
+
+function getLikeBorders(x, y){
+	let ret = ''
+	
+	for(i of getNeighborCompass(x, y)){
+		if(map[x][y].type == i.tile.type){
+			ret += i.dir
+		}
+	}
+	return ret
+}
+
+function getNeighborCompass(x,y){
+	let ret = new Array()
+	if(map[x][y-1]){
+		ret.push({dir: 'N', tile: map[x][y-1]})
+	}
+	if(map[x][y+1]){
+		ret.push({dir: 'S', tile: map[x][y+1]})
+	}
+	if(map[x-1]){
+		ret.push({dir: 'W', tile: map[x-1][y]})
+	}
+	if(map[x+1]){
+		ret.push({dir: 'E', tile: map[x+1][y]})
+	}
+	return ret
 }
 
 window.onmousedown =(e)=> {
